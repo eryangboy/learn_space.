@@ -1,0 +1,227 @@
+# gulp 自动化构建案例
+
+1. 首先安装 gulp，作为开发依赖
+
+```
+npm install gulp -dev
+```
+
+2. 处理 sass 文件
+
+- 通过 src，dest 定位 sass 文件位置
+- 通过 base:src 保留原始目录结构
+- 通过 gulp-sass 插件转换 sass 文件
+- 通过 outputStyle: "expanded"展开 css 代码：
+
+```js
+const style = () => {
+  return src("src/assets/styles/*.scss", { base: "src" })
+    .pipe(sass({ outputStyle: "expanded" }))
+    .pipe(dest("dist"));
+};
+```
+
+3. 处理 js 脚本 文件
+
+- 通过 src，dest 定位 js 文件位置
+- 通过 base:src 保留原始目录结构
+- 通过 gulp-babel,@babel/core,@babel/preset-env 插件转换 js 文件
+- babel 只是一个平台，需要配置 presets: ["@babel/preset-env"]
+
+```js
+const script = () => {
+  return src("src/assets/scripts/*.js", { base: "src" })
+    .pipe(babel({ presets: ["@babel/preset-env"] }))
+    .pipe(dest("dist"));
+};
+```
+
+4. 处理 html 文件
+
+- 通过 src，dest 定位 html 文件位置
+- 通过 base:src 保留原始目录结构
+- 通过 gulp-swig 插件编译 html 文件
+- swig 中的 data 参数用来传递数据
+
+```js
+const page = () => {
+  return src("src/*.html", { base: "src" })
+    .pipe(swig({ data }))
+    .pipe(dest("dist"));
+};
+```
+
+5. 处理图片文件
+
+- 通过 src，dest 定位图片文件位置
+- 通过 base:src 保留原始目录结构
+- 通过 gulp-imagemin 插件压缩图片文件
+
+```js
+const image = () => {
+  return src("src/assets/images/**", { base: "src" })
+    .pipe(imagemin())
+    .pipe(dest("dist"));
+};
+```
+
+6. 处理字体文件
+
+- 通过 src，dest 定位字体文件位置
+- 通过 base:src 保留原始目录结构
+- 通过 gulp-imagemin 插件压缩字体文件
+
+```js
+const font = () => {
+  return src("src/assets/fonts/**", { base: "src" })
+    .pipe(imagemin())
+    .pipe(dest("dist"));
+};
+```
+
+7. 处理其他文件文件
+
+- 通过 src，dest 定位其他文件位置
+- 通过 base:public 保留原始目录结构
+- 将 public 下的所有文件拷贝至目标目录
+
+```js
+const extra = () => {
+  return src("public/**", { base: "public" }).pipe(dest("dist"));
+};
+```
+
+8. 清除操作
+
+- 通过 del 插件清除目标文件夹
+- 先执行 chean 操作，再进行编译
+
+```js
+const clean = () => {
+  return del(["dist"]);
+};
+
+const build = series(clean, parallel(compile, extra));
+```
+
+9. 自动加载插件
+
+- loadPlugins 为一个方法
+- 插件名为驼峰式
+
+```js
+const loadPlugins = require("gulp-load-plugins");
+const plugins = loadPlugins();
+```
+
+10. 热更新开发服务器
+
+- 通过 browser-sync 插件完成
+
+```js
+// 服务器
+const serve = () => {
+  // init 初始化服务器配置
+  bs.init({
+    notify: false, // 关闭提示
+    files: "dist/**", // 监视需要更新的文件
+    port: 10086,
+    server: {
+      baseDir: "dist",
+      routes: { "/node_modules": "node_modules" },
+    },
+  });
+};
+```
+
+11. 监视变化
+
+- 通过 watch 完成
+- style，script，page 在开发阶段需要去执行
+- image，font，extra 在开发阶段不需要去执行
+
+```js
+const serve = () => {
+  watch("src/assets/styles/*.scss", style);
+  watch("src/assets/scripts/*.js", script);
+  watch("src/*.html", page);
+  //   watch("src/assets/images/**", image);
+  //   watch("src/assets/fonts/**", font);
+  //   watch("public/**", extra);
+
+  watch(
+    ["src/assets/images/**", "src/assets/fonts/**", "public/**"],
+    bs.reload
+  );
+
+  // init 初始化服务器配置
+  bs.init({
+    notify: false, // 关闭提示
+    files: "dist/**", // 监视需要更新的文件
+    port: 10086,
+    server: {
+      baseDir: ["dist", "src", "public"],
+      routes: { "/node_modules": "node_modules" },
+    },
+  });
+};
+```
+
+12. useref
+
+- 自动处理 html 中的构建注释
+- 自动将开始标签和结束标签之间的文件，自动打包到一个文件里
+- 分别压缩 html，js，css 文件
+- 通过 gulp-if 判断不同的类型
+- 通过 gulp-htmlmin,gulp-uglify,gulp-clean-css 做不同的操作
+- 需要一个临时目录：temp
+
+```js
+const useref = () => {
+  return (
+    src("temp/*.html", { base: "temp" })
+      .pipe(plugins.useref({ searchPath: ["temp", "."] }))
+      // 此处会有三种类型，html，js，css,判断类型，分别做不同的操作
+      .pipe(plugins.if(/\.js$/, plugins.uglify()))
+      .pipe(plugins.if(/\.css$/, plugins.cleanCss()))
+      .pipe(
+        plugins.if(
+          /\.html$/,
+          plugins.htmlmin({
+            collapseWhitespace: true, // 压缩HTML
+            minifyJS: true, // 压缩页面JS
+            minifyCSS: true, // 压缩页面CSS
+          })
+        )
+      )
+      .pipe(dest("dist"))
+  );
+};
+```
+
+13. 重新规划构建过程
+
+- 先 compile，后 userif
+
+```js
+const build = series(
+  clean, // 先compile，后useref
+  parallel(series(compile, useref), image, font, extra)
+);
+```
+
+14. 补充
+
+- 将没有必要对外暴露的任务去掉
+- 将命令放在 scripts 里
+- "clean": "gulp clean", "build": "gulp build","develop": "gulp develop "
+
+```js
+module.exports = {
+  build,
+  clean,
+  develop,
+};
+```
+
+# 封装工作流

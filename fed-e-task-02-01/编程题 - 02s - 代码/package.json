@@ -1,0 +1,56 @@
+{
+  "name": "gulp-eryang-demo",
+  "version": "0.1.0",
+  "description": "Awesome node module",
+  "keywords": [
+    "gulp-eryang-demo",
+    "zce"
+  ],
+  "homepage": "https://github.com/eryang/gulp-eryang-demo#readme",
+  "bugs": {
+    "url": "https://github.com/eryang/gulp-eryang-demo/issues"
+  },
+  "license": "MIT",
+  "author": "eryangboy <450867814@qq.com>",
+  "files": [
+    "lib"
+  ],
+  "main": "lib/index.js",
+  "bin": "bin/gulp-eryang-module.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eryang/gulp-eryang-demo.git"
+  },
+  "scripts": {
+    "lint": "standard --fix",
+    "test": "ava"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.10",
+    "bootstrap": "4.4.1",
+    "browser-sync": "^2.26.13",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-htmlmin": "^5.0.1",
+    "gulp-if": "^3.0.0",
+    "gulp-imagemin": "6.2.0",
+    "gulp-load-plugins": "^2.0.6",
+    "gulp-sass": "^4.1.0",
+    "gulp-swig": "^0.9.1",
+    "gulp-uglify": "^3.0.2",
+    "gulp-useref": "^5.0.0",
+    "jquery": "3.4.1",
+    "popper.js": "1.16.1"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}

@@ -23,6 +23,8 @@ exports.foo = (done) => {
 
 ![avator](./images/29.png)
 
+
+
 执行 gulp foo，会报一个错误，这是因为 gulp 约定每一个任务都是异步任务，需要调用一个回调参数标记任务完成
 
 ### gulp 创建组合任务
